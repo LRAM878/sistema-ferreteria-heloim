@@ -1,0 +1,148 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+<div class="container-fluid mt-4">
+    
+    <div class="d-flex justify-content-between align-items-center mb-4 d-print-none flex-wrap gap-3">
+        <h2 class="mb-0">📊 Reporte Mensual de Ventas</h2>
+        <div class="d-flex gap-2">
+            <button class="btn btn-success fw-bold shadow-sm" onclick="exportarExcel()">📗 Exportar a Excel</button>
+            <button class="btn btn-danger fw-bold shadow-sm" onclick="exportarPDF()">📕 Descargar PDF</button>
+        </div>
+    </div>
+
+    <div class="card shadow-sm mb-4 d-print-none border-primary">
+        <div class="card-body">
+            <form method="GET" class="row g-3 align-items-end">
+                <div class="col-md-4">
+                    <label class="form-label fw-bold">Seleccionar Mes</label>
+                    <select name="mes" class="form-select">
+                        <option value="1" {% if mes == 1 %}selected{% endif %}>Enero</option>
+                        <option value="2" {% if mes == 2 %}selected{% endif %}>Febrero</option>
+                        <option value="3" {% if mes == 3 %}selected{% endif %}>Marzo</option>
+                        <option value="4" {% if mes == 4 %}selected{% endif %}>Abril</option>
+                        <option value="5" {% if mes == 5 %}selected{% endif %}>Mayo</option>
+                        <option value="6" {% if mes == 6 %}selected{% endif %}>Junio</option>
+                        <option value="7" {% if mes == 7 %}selected{% endif %}>Julio</option>
+                        <option value="8" {% if mes == 8 %}selected{% endif %}>Agosto</option>
+                        <option value="9" {% if mes == 9 %}selected{% endif %}>Septiembre</option>
+                        <option value="10" {% if mes == 10 %}selected{% endif %}>Octubre</option>
+                        <option value="11" {% if mes == 11 %}selected{% endif %}>Noviembre</option>
+                        <option value="12" {% if mes == 12 %}selected{% endif %}>Diciembre</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-bold">Seleccionar Año</label>
+                    <input type="number" name="anio" class="form-control" value="{{ anio }}" min="2020" max="2100">
+                </div>
+                <div class="col-md-3">
+                    <button type="submit" class="btn btn-primary w-100 fw-bold">🔍 Generar Reporte</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card shadow-sm" id="zonaImpresion">
+        <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Resumen del {{ mes }}/{{ anio }}</h5>
+            <h5 class="mb-0 text-success fw-bold bg-light px-3 py-1 rounded">Ingresos Totales: ${{ "%.2f"|format(total_mes) }}</h5>
+        </div>
+        <div class="card-body p-0">
+            <table class="table table-bordered table-striped mb-0" id="tablaReporte">
+                <thead class="table-secondary">
+                    <tr>
+                        <th>N° Ticket</th>
+                        <th>Fecha y Hora</th>
+                        <th>Cliente</th>
+                        <th>Pago</th>
+                        <th>Detalle de Artículos (Cant. x Precio)</th>
+                        <th>Total Ticket</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for v in ventas %}
+                    <tr>
+                        <td class="fw-bold">{{ v.id }}</td>
+                        <td>{{ v.fecha.strftime('%d-%m-%Y %H:%M') if v.fecha else 'N/A' }}</td>
+                        <td>{{ v.cliente.nombre if v.cliente else 'Consumidor Final' }}</td>
+                        <td>{{ v.metodo_pago }}</td>
+                        <td>
+                            <ul class="mb-0 list-unstyled" style="font-size: 0.9em;">
+                            {% for detalle in v.detalles %}
+                                <li>
+                                    ▸ {{ detalle.cantidad }}x 
+                                    {{ detalle.producto.nombre if detalle.producto else 'Producto Eliminado' }} 
+                                    <span class="text-muted">(${{ "%.2f"|format(detalle.precio_unitario) }})</span> 
+                                    = <strong>${{ "%.2f"|format(detalle.subtotal) }}</strong>
+                                </li>
+                            {% endfor %}
+                            </ul>
+                        </td>
+                        <td class="fw-bold text-success">${{ "%.2f"|format(v.total) }}</td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="6" class="text-center py-5 text-muted">No se registraron ventas en la fecha seleccionada.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<style>
+    @media print {
+        /* Oculta todo el menú lateral y barra superior al imprimir */
+        body * {
+            visibility: hidden;
+        }
+        /* Solo hace visible la tarjeta del reporte */
+        #zonaImpresion, #zonaImpresion * {
+            visibility: visible;
+        }
+        /* Ajusta la tabla a la esquina superior izquierda de la hoja PDF */
+        #zonaImpresion {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+        }
+        /* Quita colores de fondo oscuros para ahorrar tinta si se imprime en papel */
+        .bg-dark {
+            background-color: #f8f9fa !important;
+            color: #000 !important;
+            border-bottom: 2px solid #000;
+        }
+    }
+</style>
+
+<script>
+    function exportarExcel() {
+        let tabla = document.getElementById('tablaReporte');
+        let libro = XLSX.utils.table_to_book(tabla, {sheet: "Reporte Mensual"});
+        XLSX.writeFile(libro, `Reporte_Ventas_{{ mes }}_{{ anio }}.xlsx`);
+    }
+
+    
+    function exportarPDF() {
+        // Seleccionamos el contenedor que queremos convertir en PDF
+        let elemento = document.getElementById('zonaImpresion');
+        
+        // Configuramos los márgenes, calidad y tamaño de hoja
+        let opciones = {
+            margin:       10, // Márgenes de 10mm
+            filename:     `Reporte_Ventas_{{ mes }}_{{ anio }}.pdf`,
+            image:        { type: 'jpeg', quality: 0.98 },
+            html2canvas:  { scale: 2 }, // Aumenta la nitidez de las letras
+            jsPDF:        { unit: 'mm', format: 'a4', orientation: 'landscape' } // orientation: 'landscape' para hoja horizontal
+        };
+
+        // El script toma la tabla, la convierte a imagen de alta calidad y la descarga
+        html2pdf().set(opciones).from(elemento).save();
+    }
+</script>
+{% endblock %}

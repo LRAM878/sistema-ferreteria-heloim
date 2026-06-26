@@ -1,0 +1,249 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <h2 class="mb-4">🛒 Nueva Venta</h2>
+
+    <div class="row">
+        <div class="col-md-7">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <span>Seleccionar Productos</span>
+                </div>
+                <div class="card-body">
+                    
+                    <div class="row mb-3 g-2">
+                        <div class="col-md-7">
+                            <input type="text" id="buscadorPOS" class="form-control border-primary" placeholder="🔍 Buscar por ID o Nombre..." onkeyup="filtrarCaja()">
+                        </div>
+                        <div class="col-md-5">
+                            <select id="filtroCategoria" class="form-select border-primary" onchange="filtrarCaja()">
+                                <option value="">Todas las categorías</option>
+                                <option value="construcción">Construcción</option>
+                                <option value="fontanería">Fontanería</option>
+                                <option value="electricidad">Electricidad</option>
+                                <option value="pinturas">Pinturas</option>
+                                <option value="automotriz">Automotriz</option>
+                                <option value="herramientas">Herramientas</option>
+                                <option value="carpintería">Carpintería</option>
+                                <option value="general">General</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row g-2 align-items-center">
+                        <div class="col-8">
+                            <select id="productoSelect" class="form-select" size="6">
+                                {% for p in productos %}
+                                    <option value="{{ p.id }}" 
+                                    data-precio="{{ p.precio_venta }}" 
+                                    data-nombre="{{ p.nombre }}" 
+                                    data-stock="{{ p.stock_actual }}" 
+                                    data-codigo="{{ p.codigo }}" 
+                                    data-categoria="{{ p.categoria.nombre if p.categoria else 'General' }}"
+                                    data-proveedor="{{ p.proveedor.nombre if p.proveedor else 'Sin Proveedor' }}">
+                                {{ p.codigo }} - {{ p.nombre }} (Prov: {{ p.proveedor.nombre if p.proveedor else 'N/A' }} | Stock: {{ p.stock_actual }} | ${{ p.precio_venta }})
+                            </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-2">
+                            <label class="form-label text-muted small mb-0">Cantidad</label>
+                            <input type="number" id="cantidadInput" class="form-control" value="1" min="1">
+                        </div>
+                        <div class="col-2">
+                            <label class="form-label mb-0">&nbsp;</label>
+                            <button type="button" class="btn btn-success w-100 fw-bold" onclick="agregarAlCarrito()">Añadir</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-5">
+            <div class="card shadow-sm">
+                <div class="card-header bg-dark text-white">Resumen de Compra</div>
+                
+                <div class="card-body bg-light border-bottom p-3">
+                    <label for="inputCliente" class="form-label fw-bold text-dark mb-1">👥 Buscar y Asignar Cliente:</label>
+                    <input list="listaClientes" id="inputCliente" class="form-control border-primary shadow-sm" placeholder="🔍 Escribe DUI o Nombre... (Vacío = Consumidor Final)">
+                    
+                    <datalist id="listaClientes">
+                        {% for c in clientes %}
+                            <option data-id="{{ c.id }}" value="{{ c.dui }} - {{ c.nombre }}"></option>
+                        {% endfor %}
+                    </datalist>
+                </div>
+                <div class="card-body bg-light border-bottom p-3">
+                    <label for="metodo_pago" class="form-label fw-bold text-dark mb-1">💳 Método de Pago:</label>
+                    <select name="metodo_pago" id="metodo_pago" class="form-select border-primary shadow-sm">
+                        <option value="Efectivo">💵 Efectivo</option>
+                        <option value="Transferencia">🏦 Transferencia </option>
+                        <option value="Tarjeta">💳 Tarjeta de Crédito/Débito</option>
+                    </select>
+                </div>
+                
+                <div class="card-body p-0">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Producto</th>
+                                <th>Cant.</th>
+                                <th>Total</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody id="tablaCarrito">
+                            </tbody>
+                    </table>
+                </div>
+                <div class="card-footer d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0 fw-bold">Total: $<span id="totalVenta">0.00</span></h5>
+                    <button class="btn text-white fw-bold px-4" style="background-color: #175294;" onclick="procesarVenta()">Cobrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let carrito = [];
+
+    function filtrarCaja() {
+        let textoFiltro = document.getElementById("buscadorPOS").value.toLowerCase();
+        let categoriaFiltro = document.getElementById("filtroCategoria").value.toLowerCase();
+        let select = document.getElementById("productoSelect");
+        let opciones = select.getElementsByTagName("option");
+
+        for (let i = 0; i < opciones.length; i++) {
+            let textoVisible = opciones[i].text.toLowerCase();
+            let categoria = opciones[i].getAttribute('data-categoria').toLowerCase();
+            let codigo = opciones[i].getAttribute('data-codigo').toLowerCase();
+
+            let coincideTexto = textoVisible.includes(textoFiltro) || codigo.includes(textoFiltro);
+            let coincideCategoria = (categoriaFiltro === "") || (categoria === categoriaFiltro);
+
+            if (coincideTexto && coincideCategoria) {
+                opciones[i].style.display = ""; 
+            } else {
+                opciones[i].style.display = "none"; 
+            }
+        }
+    }
+
+    function agregarAlCarrito() {
+        const select = document.getElementById('productoSelect');
+        const cantidad = parseInt(document.getElementById('cantidadInput').value);
+        
+        if (!select.value) {
+            alert("Por favor selecciona un producto");
+            return;
+        }
+
+        const option = select.options[select.selectedIndex];
+        const stockDisponible = parseInt(option.getAttribute('data-stock'));
+
+        if (cantidad > stockDisponible) {
+            alert("No hay suficiente stock para esa cantidad");
+            return;
+        }
+
+        const item = {
+            producto_id: select.value,
+            nombre: option.getAttribute('data-nombre'),
+            precio: parseFloat(option.getAttribute('data-precio')),
+            text_precio: option.getAttribute('data-precio'),
+            cantidad: cantidad,
+            subtotal: parseFloat(option.getAttribute('data-precio')) * cantidad
+        };
+
+        carrito.push(item);
+        actualizarTabla();
+        
+        select.value = "";
+        document.getElementById('cantidadInput').value = 1;
+    }
+
+    function actualizarTabla() {
+        const tbody = document.getElementById('tablaCarrito');
+        tbody.innerHTML = '';
+        let total = 0;
+
+        carrito.forEach((item, index) => {
+            total += item.subtotal;
+            tbody.innerHTML += `
+                <tr>
+                    <td>${item.nombre}</td>
+                    <td>${item.cantidad}</td>
+                    <td>$${item.subtotal.toFixed(2)}</td>
+                    <td><button class="btn btn-sm btn-danger py-0" onclick="eliminarItem(${index})">X</button></td>
+                </tr>
+            `;
+        });
+
+        document.getElementById('totalVenta').innerText = total.toFixed(2);
+    }
+
+    function eliminarItem(index) {
+        carrito.splice(index, 1);
+        actualizarTabla();
+    }
+
+    function procesarVenta() {
+        if (carrito.length === 0) {
+            alert("El carrito está vacío");
+            return;
+        }
+
+        // Lógica para buscar el ID del cliente escrito en la barra de búsqueda
+        let idSeleccionado = null;
+        const inputCliente = document.getElementById('inputCliente').value;
+        
+        if (inputCliente) {
+            const opciones = document.getElementById('listaClientes').options;
+            for (let i = 0; i < opciones.length; i++) {
+                if (opciones[i].value === inputCliente) {
+                    idSeleccionado = opciones[i].getAttribute('data-id');
+                    break;
+                }
+            }
+        }
+
+        // Capturamos el total y el método de pago
+        const totalCalculado = document.getElementById('totalVenta').innerText;
+        const metodoPagoSeleccionado = document.getElementById('metodo_pago').value;
+
+        fetch("{{ url_for('sales.procesar_venta') }}", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": "{{ csrf_token() }}" 
+            },
+            body: JSON.stringify({ 
+                carrito: carrito,
+                cliente_id: idSeleccionado,
+                total: parseFloat(totalCalculado),
+                metodo_pago: metodoPagoSeleccionado  // 👈 NUEVO: Lo enviamos al servidor
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                alert("Error: " + data.error);
+            } else {
+                alert("¡Venta completada con éxito!");
+                carrito = [];
+                actualizarTabla();
+                document.getElementById('inputCliente').value = ""; 
+                // Reiniciamos el método de pago a Efectivo
+                document.getElementById('metodo_pago').value = "Efectivo"; 
+                window.location.reload();
+            }
+        })
+        .catch(error => {
+            console.error("Error:", error);
+            alert("Hubo un error al procesar la venta");
+        });
+    }
+</script>
+{% endblock %}

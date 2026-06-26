@@ -1,0 +1,95 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <h2 class="mb-4">📜 Historial de Ventas</h2>
+
+    <div class="row mb-3 g-2">
+        <div class="col-md-6">
+            <input type="text" id="buscadorHistorial" class="form-control border-primary shadow-sm" placeholder="🔍 Buscar por Nombre de Cliente o DUI..." onkeyup="filtrarHistorial()">
+        </div>
+        <div class="col-md-4">
+            <select id="filtroPago" class="form-select border-primary shadow-sm" onchange="filtrarHistorial()">
+                <option value="">Todos los métodos de pago</option>
+                <option value="Efectivo">Efectivo</option>
+                <option value="Transferencia">Transferencia</option>
+                <option value="Tarjeta">Tarjeta</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body p-0">
+            <table class="table table-striped table-hover mb-0" id="tablaVentas">
+                <thead class="table-dark">
+                    <tr>
+                        <th># Ticket</th>
+                        <th>Fecha y Hora</th>
+                        <th>Cliente</th>
+                        <th>Pago</th> <th>Total</th>
+                        <th>Estado</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for v in ventas %}
+                    <tr>
+                        <td class="fw-bold">{{ v.id }}</td>
+                        <td>{{ v.fecha.strftime('%Y-%m-%d %H:%M') if v.fecha else 'N/A' }}</td>
+                        
+                        <td class="cliente-nombre">
+                            {% if v.cliente %}
+                                {{ v.cliente.nombre }} <br> <small class="text-muted">DUI: {{ v.cliente.dui }}</small>
+                            {% else %}
+                                <span class="badge bg-secondary">Consumidor Final</span>
+                            {% endif %}
+                        </td>
+                        
+                        <td class="metodo-pago">
+                            <span class="badge bg-info text-dark">{{ v.metodo_pago }}</span>
+                        </td>
+                        
+                        <td class="text-success fw-bold">${{ "%.2f"|format(v.total) }}</td>
+                        <td><span class="badge bg-success">Completada</span></td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="6" class="text-center py-4 text-muted">No hay ventas registradas aún.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    function filtrarHistorial() {
+        let textoFiltro = document.getElementById("buscadorHistorial").value.toLowerCase();
+        let pagoFiltro = document.getElementById("filtroPago").value.toLowerCase();
+        
+        let tabla = document.getElementById("tablaVentas");
+        let filas = tabla.getElementsByTagName("tr");
+
+        // Empezamos desde 1 para ignorar el encabezado (thead)
+        for (let i = 1; i < filas.length; i++) {
+            let columnaCliente = filas[i].getElementsByTagName("td")[2]; 
+            let columnaPago = filas[i].getElementsByTagName("td")[3]; // La columna 3 es el Pago
+            
+            if (columnaCliente && columnaPago) {
+                let textoCliente = (columnaCliente.textContent || columnaCliente.innerText).toLowerCase();
+                let textoPago = (columnaPago.textContent || columnaPago.innerText).toLowerCase();
+                
+                let coincideCliente = textoCliente.indexOf(textoFiltro) > -1;
+                let coincidePago = (pagoFiltro === "") || (textoPago.indexOf(pagoFiltro) > -1);
+
+                // Solo mostramos la fila si cumple con AMBAS condiciones
+                if (coincideCliente && coincidePago) {
+                    filas[i].style.display = "";
+                } else {
+                    filas[i].style.display = "none";
+                }
+            }
+        }
+    }
+</script>
+{% endblock %}

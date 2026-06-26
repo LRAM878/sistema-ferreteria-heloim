@@ -1,0 +1,35 @@
+:root {
+    --primary-blue: #0A2342; /* Azul oscuro empresarial */
+    --secondary-gray: #E8ECEF; /* Gris de fondo */
+    --accent-blue: #175294; /* Botones primarios */
+    --white: #FFFFFF;
+}
+
+body {
+    background-color: var(--secondary-gray);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.sidebar {
+    background-color: var(--primary-blue);
+    color: var(--white);
+    min-height: 100vh;
+}
+
+.sidebar a {
+    color: #cbd5e1;
+    text-decoration: none;
+    padding: 10px;
+    display: block;
+}
+
+.sidebar a:hover {
+    color: var(--white);
+    background-color: var(--accent-blue);
+}
+
+.card-dashboard {
+    border: none;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+}

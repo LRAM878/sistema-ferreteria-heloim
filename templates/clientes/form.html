@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>{{ titulo }}</h2>
+    
+    <div class="card shadow p-4 mt-3 col-md-8 offset-md-2">
+        <form method="POST" action="">
+            {{ form.hidden_tag() }}
+            
+            <div class="mb-3">
+                {{ form.direccion.label(class="form-label fw-bold") }}
+                {{ form.direccion(class="form-control", placeholder="Dirección del cliente (Opcional)") }}
+                {% for error in form.direccion.errors %}
+                    <small class="text-danger">{{ error }}</small>
+                {% endfor %}
+            </div>
+            
+            <div class="mb-3">
+                {{ form.dui.label(class="form-label fw-bold") }}
+                {{ form.dui(class="form-control", placeholder="Ej: 12345678-9") }}
+                {% for error in form.dui.errors %}
+                    <small class="text-danger">{{ error }}</small>
+                {% endfor %}
+            </div>
+
+            <div class="mb-3">
+                {{ form.nombre.label(class="form-label fw-bold") }}
+                {{ form.nombre(class="form-control", placeholder="Nombre completo del cliente") }}
+                {% for error in form.nombre.errors %}
+                    <small class="text-danger">{{ error }}</small>
+                {% endfor %}
+            </div>
+
+            <div class="mb-3">
+                {{ form.telefono.label(class="form-label fw-bold") }}
+                {{ form.telefono(class="form-control", placeholder="Ej: 7777-8888") }}
+                {% for error in form.telefono.errors %}
+                    <small class="text-danger">{{ error }}</small>
+                {% endfor %}
+            </div>
+
+            <div class="mb-3">
+                {{ form.correo.label(class="form-label fw-bold") }}
+                {{ form.correo(class="form-control", placeholder="correo@ejemplo.com (Opcional)") }}
+                {% for error in form.correo.errors %}
+                    <small class="text-danger">{{ error }}</small>
+                {% endfor %}
+            </div>
+
+            <div class="d-flex justify-content-between mt-4">
+                <a href="{{ url_for('clients.index') }}" class="btn btn-secondary">Cancelar</a>
+                {{ form.submit(class="btn btn-success px-4") }}
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

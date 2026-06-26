@@ -1,0 +1,99 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+        <h2 class="mb-0"> Control de Inventario</h2>
+        
+        <form class="d-flex" method="GET" action="{{ url_for('products.index') }}" style="flex-grow: 1; max-width: 500px;">
+            <input class="form-control me-2 shadow-sm" type="search" name="search" placeholder="🔍 Buscar por ID o Nombre..." value="{{ search_query }}">
+            <button class="btn btn-secondary shadow-sm fw-bold" type="submit">Buscar</button>
+            
+            {% if search_query %}
+                <a href="{{ url_for('products.index') }}" class="btn btn-outline-danger ms-2 shadow-sm" title="Limpiar búsqueda">✖</a>
+            {% endif %}
+        </form>
+
+        <a href="{{ url_for('products.nuevo') }}" class="btn text-white fw-bold shadow-sm" style="background-color: #175294;">
+            ➕ Agregar Producto
+        </a>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <div class="card shadow-sm">
+        <div class="card-body p-0">
+            <table class="table table-striped table-hover mb-0 align-middle">
+                <thead class="table-dark" style="background-color: #0A2342;">
+                    <tr>
+                        <th>Código</th>
+                        <th>Nombre</th>
+                        <th>Proveedor</th> <th>Precio Compra</th>
+                        <th>Precio Venta</th>
+                        <th>Stock Actual</th>
+                        <th>Estado</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if productos %}
+                        {% for p in productos %}
+                        <tr>
+                            <td><strong>{{ p.codigo }}</strong></td>
+                            <td>{{ p.nombre }}</td>
+                            <td>
+                                {% if p.proveedor %}
+                                    <span class="badge bg-info text-dark">{{ p.proveedor.nombre }}</span>
+                                {% else %}
+                                    <span class="text-muted small">Sin proveedor</span>
+                                {% endif %}
+                            </td>
+                            <td>${{ p.precio_compra }}</td>
+                            <td>${{ p.precio_venta }}</td>
+                            <td>
+                                {% if p.stock_actual <= p.stock_minimo %}
+                                    <span class="badge bg-danger">Low: {{ p.stock_actual }}</span>
+                                {% else %}
+                                    <span class="badge bg-success">{{ p.stock_actual }} unidades</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="badge {{ 'bg-success' if p.estado else 'bg-secondary' }}">
+                                    {{ 'Activo' if p.estado else 'Inactivo' }}
+                                </span>
+                            </td>
+                            <td>
+                                <div class="d-flex gap-2">
+                                    <a href="{{ url_for('products.editar', id=p.id) }}" class="btn btn-sm btn-warning fw-bold text-dark">
+                                         Editar
+                                    </a>
+                                    <form action="{{ url_for('products.eliminar', id=p.id) }}" method="POST" onsubmit="return confirm('¿Estás seguro de que deseas eliminar este producto? Esta acción no se puede deshacer.');">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button type="submit" class="btn btn-sm btn-danger fw-bold">
+                                             Eliminar
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="8" class="text-center text-muted py-4">No hay productos registrados aún. ¡Presiona el botón azul para agregar el primero!</td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
