@@ -37,7 +37,30 @@ def create_app():
     app.register_blueprint(proveedores_bp)
     from routes.reportes import reportes_bp
     app.register_blueprint(reportes_bp)
-    
+    from werkzeug.security import generate_password_hash
+    from models.models import Usuario 
+
+    with app.app_context():
+        db.create_all() # Crea las tablas si no existen
+        
+        # Lista de usuarios a crear
+        usuarios_default = [
+            {'username': 'admin', 'password': 'admin123', 'rol': 'Administrador'},
+            {'username': 'vendedor', 'password': 'vendedor123', 'rol': 'Vendedor'}
+        ]
+        
+        for u in usuarios_default:
+            existe = Usuario.query.filter_by(username=u['username']).first()
+            if not existe:
+                nuevo_usuario = Usuario(
+                    username=u['username'],
+                    password_hash=generate_password_hash(u['password']),
+                    rol=u['rol'],
+                    estado=True
+                )
+                db.session.add(nuevo_usuario)
+        
+        db.session.commit()
 
     @app.route('/')
     def home():
