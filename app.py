@@ -38,7 +38,7 @@ def create_app():
     from routes.reportes import reportes_bp
     app.register_blueprint(reportes_bp)
     from werkzeug.security import generate_password_hash
-    from models.models import Usuario 
+    from models.models import Usuario, Categoria, Producto
 
     with app.app_context():
         db.create_all() # Crea las tablas si no existen
@@ -59,6 +59,14 @@ def create_app():
                     estado=True
                 )
                 db.session.add(nuevo_usuario)
+        categorias_fijas = [
+            'General', 'Construcción', 'Fontanería', 'Electricidad', 
+            'Pinturas', 'Automotriz', 'Herramientas', 'Carpintería'
+        ]
+        for cat_nombre in categorias_fijas:
+            if not Categoria.query.filter_by(nombre=cat_nombre).first():
+                nueva_cat = Categoria(nombre=cat_nombre, descripcion=f"Área de {cat_nombre}")
+                db.session.add(nueva_cat)       
         
         db.session.commit()
 

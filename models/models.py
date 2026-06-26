@@ -19,26 +19,30 @@ class Usuario(UserMixin, db.Model):
         return check_password_hash(self.password_hash, password)
 
 class Categoria(db.Model):
-    __tablename__ = 'categorias'
+    __tablename__ = 'categoria'
     id = db.Column(db.Integer, primary_key=True)
     nombre = db.Column(db.String(100), nullable=False)
-    descripcion = db.Column(db.Text, nullable=True)
+    descripcion = db.Column(db.String(200))
 
 class Producto(db.Model):
     __tablename__ = 'productos'
     id = db.Column(db.Integer, primary_key=True)
     codigo = db.Column(db.String(50), unique=True, nullable=False)
     nombre = db.Column(db.String(150), nullable=False)
-    categoria_id = db.Column(db.Integer, db.ForeignKey('categorias.id'))
+
+    categoria_id = db.Column(db.Integer, db.ForeignKey('categoria.id'), nullable=False)
+    proveedor_id = db.Column(db.Integer, db.ForeignKey('proveedores.id'), nullable=True)
+
     precio_compra = db.Column(db.Numeric(10, 2), nullable=False)
     precio_venta = db.Column(db.Numeric(10, 2), nullable=False)
     stock_actual = db.Column(db.Integer, default=0)
     stock_minimo = db.Column(db.Integer, default=5)
     estado = db.Column(db.Boolean, default=True)
-    categoria = db.relationship('Categoria', backref='productos', lazy=True)
+
+    
     # Relación para historial
+    categoria = db.relationship('Categoria', backref='productos')
     movimientos = db.relationship('MovimientoInventario', backref='producto', lazy=True)
-    proveedor_id = db.Column(db.Integer, db.ForeignKey('proveedores.id'), nullable=True)
 
 class MovimientoInventario(db.Model):
     __tablename__ = 'movimientos_inventario'

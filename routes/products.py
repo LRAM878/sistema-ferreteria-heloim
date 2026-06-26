@@ -37,11 +37,10 @@ def nuevo():
         db.session.commit()
 
     form = ProductoForm()
-    form.categoria_id.choices = [(c.id, c.nombre) for c in Categoria.query.all()]
-    
-    # NUEVO: Obtenemos los proveedores para mandarlos al HTML
+    form.categoria.choices = [(c.id, c.nombre) for c in Categoria.query.all()]
+    # --------------------------------------------
+
     proveedores = Proveedor.query.all()
-    
     if form.validate_on_submit():
         #  SEGURO ANTI-DUPLICADOS: Verificamos si el código/ID ya existe en la BD
         existe = Producto.query.filter_by(codigo=form.codigo.data).first()
@@ -57,7 +56,7 @@ def nuevo():
         nuevo_prod = Producto(
             codigo=form.codigo.data,
             nombre=form.nombre.data,
-            categoria_id=form.categoria_id.data,
+            categoria_id=form.categoria.data,
             proveedor_id=prov_id,  # <-- Asignamos el proveedor
             precio_compra=form.precio_compra.data,
             precio_venta=form.precio_venta.data,

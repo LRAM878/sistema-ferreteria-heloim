@@ -12,7 +12,13 @@ class LoginForm(FlaskForm):
 class ProductoForm(FlaskForm):
     codigo = StringField('Código de Barra / Único', validators=[DataRequired()])
     nombre = StringField('Nombre del Producto', validators=[DataRequired()])
-    categoria_id = SelectField('Categoría', coerce=int, validators=[DataRequired()])
+    categoria = SelectField('categoría', coerce=int, validators=[DataRequired()])
+    def __init__(self, *args, **kwargs):
+        super(ProductoForm, self).__init__(*args, **kwargs)
+        # Importación local para evitar el NameError y el error circular
+        from models.models import Categoria
+        self.categoria.choices = [(c.id, c.nombre) for c in Categoria.query.all()]
+
     precio_compra = DecimalField('Precio de Compra ($)', validators=[DataRequired(), NumberRange(min=0)])
     precio_venta = DecimalField('Precio de Venta ($)', validators=[DataRequired(), NumberRange(min=0)])
     stock_actual = IntegerField('Stock Inicial', default=0, validators=[NumberRange(min=0)])
