@@ -75,7 +75,7 @@ def nuevo():
 def editar(id):
     producto = Producto.query.get_or_404(id)
     form = ProductoForm(obj=producto)
-    form.categoria_id.choices = [(c.id, c.nombre) for c in Categoria.query.all()]
+    form.categoria.choices = [(c.id, c.nombre) for c in Categoria.query.all()]
     
     # NUEVO: Obtenemos los proveedores
     proveedores = Proveedor.query.all()
