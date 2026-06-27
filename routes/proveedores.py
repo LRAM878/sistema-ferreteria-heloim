@@ -35,3 +35,49 @@ def nuevo():
         return redirect(url_for('proveedores.index'))
         
     return render_template('proveedores/nuevo.html') # <-- Muestra la nueva pantalla
+
+
+# ==========================================
+# NUEVAS RUTAS AGREGADAS (EDITAR Y ELIMINAR)
+# ==========================================
+
+@proveedores_bp.route('/editar/<int:id>', methods=['GET', 'POST'])
+@login_required
+def editar(id):
+    if not solo_admin(): return redirect(url_for('dashboard.index'))
+    
+    # Buscamos el proveedor por su ID
+    proveedor = Proveedor.query.get_or_404(id)
+    
+    if request.method == 'POST':
+        # Actualizamos los datos con lo que viene del formulario
+        proveedor.nombre = request.form.get('nombre')
+        proveedor.telefono = request.form.get('telefono')
+        proveedor.correo = request.form.get('correo')
+        proveedor.direccion = request.form.get('direccion')
+        
+        db.session.commit()
+        flash('¡Proveedor actualizado exitosamente!', 'success')
+        return redirect(url_for('proveedores.index'))
+        
+    # Renderizamos la plantilla para editar, pasándole los datos del proveedor actual
+    return render_template('proveedores/editar.html', proveedor=proveedor)
+
+
+@proveedores_bp.route('/eliminar/<int:id>', methods=['POST'])
+@login_required
+def eliminar(id):
+    if not solo_admin(): return redirect(url_for('dashboard.index'))
+    
+    proveedor = Proveedor.query.get_or_404(id)
+    
+    try:
+        db.session.delete(proveedor)
+        db.session.commit()
+        flash('¡Proveedor eliminado exitosamente!', 'success')
+    except Exception as e:
+        db.session.rollback()
+        # Esto previene errores 500 si intentas borrar un proveedor que ya está amarrado a un producto
+        flash('Error: No se puede eliminar este proveedor porque ya está asignado a uno o más productos.', 'danger')
+        
+    return redirect(url_for('proveedores.index'))

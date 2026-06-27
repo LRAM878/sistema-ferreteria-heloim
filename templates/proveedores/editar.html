@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4" style="max-width: 600px;">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>✏️ Editar Proveedor</h2>
+        <a href="{{ url_for('proveedores.index') }}" class="btn btn-outline-secondary shadow-sm">
+            ⬅️ Volver
+        </a>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-header text-white fw-bold" style="background-color: #0A2342;">
+            Actualizar datos del proveedor
+        </div>
+        <div class="card-body">
+            <form method="POST">
+                
+                <div class="mb-3">
+                    <label for="nombre" class="form-label fw-bold">Nombre</label>
+                    <input type="text" class="form-control" id="nombre" name="nombre" value="{{ proveedor.nombre }}" required>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="telefono" class="form-label fw-bold">Teléfono</label>
+                    <input type="text" class="form-control" id="telefono" name="telefono" value="{{ proveedor.telefono if proveedor.telefono != None else '' }}">
+                </div>
+                
+                <div class="mb-3">
+                    <label for="correo" class="form-label fw-bold">Correo Electrónico</label>
+                    <input type="email" class="form-control" id="correo" name="correo" value="{{ proveedor.correo if proveedor.correo != None else '' }}">
+                </div>
+                
+                <div class="mb-4">
+                    <label for="direccion" class="form-label fw-bold">Dirección</label>
+                    <textarea class="form-control" id="direccion" name="direccion" rows="3">{{ proveedor.direccion if proveedor.direccion != None else '' }}</textarea>
+                </div>
+                
+                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                    <a href="{{ url_for('proveedores.index') }}" class="btn btn-secondary">Cancelar</a>
+                    <button type="submit" class="btn text-white fw-bold" style="background-color: #175294;">
+                        💾 Guardar Cambios
+                    </button>
+                </div>
+
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
